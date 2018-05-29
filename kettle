@@ -1,0 +1,109 @@
+#!/bin/bash
+HEIGHT=18
+CHOICE_HEIGHT=10
+WIDTH=78
+BACKTITLE="SYSTEM MENU"
+TITLE="[ K E T T L E ]"
+MENU="Opciones de Kettle: "
+
+OPTIONS=(
+Spoon	"Ejecuta spoon.sh"
+Pan	"Ejecuta pan.sh"
+Kitchen "Ejecuta kitchen.sh"
+Carte	"Ejecuta carte.sh"
+Editar  "Editar este script"
+Salir   "Salir del menú"
+)
+
+CHOICE=$(whiptail --clear \
+    --backtitle "$BACKTITLE" \
+    --title "$TITLE" \
+    --menu "$MENU" \
+    $HEIGHT $WIDTH $CHOICE_HEIGHT \
+    "${OPTIONS[@]}" \
+    2>&1 >/dev/tty)
+
+function startSpoon {
+
+        bash /pentaho/data-integration/spoon.sh
+
+}
+
+function startPan {
+
+	echo "¿Quieres introducir solo la transformación a ejecutar sin utilizar parametros? S/n"
+	read siono 
+	if [ "$siono" = "S" ] || [ "$siono" = "s" ] || [ -z "$siono" ]; then
+		read -p "Introduce el nombre de la transformación: " trans
+        	bash /pentaho/data-integration/pan.sh -file="/pentaho/Documentos/Transformaciones/$trans"
+	elif [ "$siono" = "N" ] || [ "$siono" = "n" ]; then 
+		read -p "Introduce los parámetros: " param
+        	bash "/pentaho/data-integration/pan.sh $param"
+        fi
+
+}
+
+function startKitchen {
+
+	echo "¿Quieres introducir solo el trabajo a ejecutar sin utilizar parametros? S/n"
+	read siono 
+	if [ "$siono" = "S" ] || [ "$siono" = "s" ] || [ -z "$siono" ]; then
+		read -p "Introduce el nombre del trabajo: " job
+        	bash /pentaho/data-integration/kitchen.sh -file="/pentaho/Documentos/Trabajos/$job"
+	elif [ "$siono" = "N" ] || [ "$siono" = "n" ]; then 
+		read -p "Introduce los parámetros: " param
+        	bash "/pentaho/data-integration/kitchen.sh $param"
+        fi
+
+}
+
+function startCarte {
+
+	archivos=`ls /pentaho/data-integration/pwd | grep ".xml"`
+	lista=`for x in $archivos; do echo $x "-"; done`
+	param=$(whiptail --title "Archivos de configuracion" --backtitle "Menu de Carte" --menu "Elige la configuracion de Carte" 20 80 10 $lista 3>&1 1>&2 2>&3) #para redirigir stderr a stdout
+	if [ $? -eq 0 ]; then
+		bash "/pentaho/data-integration/carte.sh" pwd/$param 
+	fi
+}
+
+function editar {
+
+        nano /usr/local/bin/kettle
+
+}
+
+
+clear
+case $CHOICE in
+    Spoon)
+
+		startSpoon
+        ;;
+
+    Pan)
+
+		startPan
+        ;;
+
+    Kitchen)
+
+		startKitchen
+		;;
+
+    Carte)
+
+		startCarte
+        ;;
+
+    Editar)
+
+		editar
+        ;;
+
+    Salir)
+
+        exit
+	;;
+esac
+
